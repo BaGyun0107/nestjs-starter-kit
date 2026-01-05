@@ -112,7 +112,7 @@
     "testEnvironment": "node"
   },
   "lint-staged": {
-    "*.ts": [
+    "{src,apps,libs,test}/**/*.ts": [
       "npm run format",
       "npm run lint"
     ]

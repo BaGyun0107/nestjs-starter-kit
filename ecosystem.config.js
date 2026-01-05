@@ -2,7 +2,33 @@ const commonSettings = {
   instances: 2,
   exec_mode: 'cluster',
   watch: false,
-  max_memory_restart: '1G'
+  log_date_format: 'YYYY-MM-DD HH:mm:ss',
+  max_memory_restart: '1G',
+  // 재시작 관련
+  max_restarts: 5,
+  restart_delay: 10000,
+  min_uptime: 5000,
+  autorestart: true,
+
+  // Ready 신호 관련
+  wait_ready: true,
+  listen_timeout: 10000,
+
+  // 종료 관련
+  kill_timeout: 8000,
+
+  // 클러스터 모드 옵션
+  instance_var: 'INSTANCE_ID',
+  merge_logs: true,
+  node_args: ['--enable-source-maps'],
+
+  // 로그 타임스탬프
+  time: true,
+
+  // 로그 설정 (Winston으로 대체하여 PM2 로그 비활성화)
+  log_file: '/dev/null',
+  error_file: '/dev/null',
+  out_file: '/dev/null'
 };
 
 module.exports = {
@@ -10,25 +36,11 @@ module.exports = {
     // 개발 환경 설정
     {
       ...commonSettings,
-      name: 'codi_account_nest_dev',
+      name: 'nestjs-starter-kit-dev',
       script: 'dist/main.js', // NestJS는 빌드 후 dist/main.js를 실행
       env: {
         NODE_ENV: 'development'
-      },
-      max_restarts: 5,
-      restart_delay: 10000
-    },
-    // 프로덕션 환경 설정
-    {
-      ...commonSettings,
-      name: 'codi_account_nest_prd',
-      script: 'dist/main.js', // NestJS는 빌드 후 dist/main.js를 실행
-      instances: 5,
-      env: {
-        NODE_ENV: 'production'
-      },
-      max_restarts: 5, // 최대 재시작 횟수
-      restart_delay: 10000 // 재시작 시도 간 대기 시간 (밀리초)
+      }
     }
   ]
 };

@@ -177,6 +177,11 @@ async function bootstrap() {
   await app.listen(port);
   logSvc.log(`PORT:${port} 서버 정상 작동`, 'Bootstrap');
 
+  // PM2에게 구동 완료 신호 전송
+  if (process.send) {
+    process.send('ready');
+  }
+
   // 시그널 처리
   process.on('SIGTERM', () => {
     return gracefulShutdown(app, logSvc, 'SIGTERM');
