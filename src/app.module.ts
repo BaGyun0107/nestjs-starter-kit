@@ -19,12 +19,15 @@ import {
 } from './common/middlewares/ip-filter.middleware';
 import { TimeoutInterceptor } from './common/interceptors/timeout.interceptor';
 
+import { validate } from './config/env.validation';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: `.env.${process.env.NODE_ENV || 'local'}`,
-      load: [configuration]
+      load: [configuration],
+      validate
     }),
     // Rate Limiting 설정 (전역)
     ThrottlerModule.forRootAsync({

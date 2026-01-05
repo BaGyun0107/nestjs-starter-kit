@@ -1,7 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import {
+  INestApplication,
+  ValidationPipe,
+  VersioningType
+} from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as compression from 'compression';
 import * as cookieParser from 'cookie-parser';
 import * as morgan from 'morgan';
 import helmet from 'helmet';
@@ -81,6 +87,30 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
+  // Gzip 압축
+  app.use(compression());
+
+  // API 버전 관리
+  app.enableVersioning({
+    type: VersioningType.URI
+  });
+
+  // Swagger 설정
+  if (configService.get('env') !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('NestJS Starter API')
+      .setDescription('The API description')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .addApiKey(
+        { type: 'apiKey', name: 'x-api-key', in: 'header' },
+        'x-api-key'
+      )
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document);
+  }
+
   // Morgan 로깅 설정 (Winston Stream 연결)
   const env = configService.get('env');
   if (env !== 'test') {
@@ -142,15 +172,12 @@ async function bootstrap() {
     credentials: true
   });
 
-  // Graceful Shutdown 활성화
-  // app.enableShutdownHooks();
-
   const port = configService.get('port');
 
   await app.listen(port);
   logSvc.log(`PORT:${port} 서버 정상 작동`, 'Bootstrap');
 
-  // 시그널 처리 (NestJS enableShutdownHooks가 있지만, 명시적으로 로거를 쓰고 싶은 경우 유지)
+  // 시그널 처리
   process.on('SIGTERM', () => {
     return gracefulShutdown(app, logSvc, 'SIGTERM');
   });
