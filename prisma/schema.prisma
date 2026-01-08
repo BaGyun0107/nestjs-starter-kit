@@ -7,3 +7,337 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model AdminAuditLogs {
+  id          BigInt   @id @default(autoincrement())
+  adminId     BigInt   @map("admin_id")
+  targetType  String   @map("target_type") @db.VarChar(50)
+  targetId    BigInt   @map("target_id")
+  action      String   @db.VarChar(50)
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.DateTime(0)
+  admins      Admins   @relation(fields: [adminId], references: [id], onUpdate: Restrict, map: "admin_audit_logs_ibfk_1")
+
+  @@index([adminId], map: "admin_id")
+  @@map("admin_audit_logs")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model Admins {
+  id             BigInt           @id @default(autoincrement())
+  loginId        String           @unique(map: "account") @map("login_id") @db.VarChar(50)
+  password       String           @db.VarChar(255)
+  name           String           @db.VarChar(50)
+  department     String?          @db.VarChar(50)
+  adminLevel     Int?             @default(1) @map("admin_level")
+  lastLoginAt    DateTime?        @map("last_login_at") @db.DateTime(0)
+  lastLoginIp    String?          @map("last_login_ip") @db.VarChar(50)
+  isActive       Boolean?         @default(true) @map("is_active")
+  createdAt      DateTime         @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt      DateTime         @default(now()) @map("updated_at") @db.DateTime(0)
+  adminAuditLogs AdminAuditLogs[]
+
+  @@map("admins")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model HotelImages {
+  id           BigInt @id @default(autoincrement())
+  hotelId      BigInt @map("hotel_id")
+  imageUrl     String @map("image_url") @db.VarChar(255)
+  displayOrder Int?   @default(0) @map("display_order")
+  hotels       Hotels @relation(fields: [hotelId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "hotel_images_ibfk_1")
+
+  @@index([hotelId], map: "hotel_id")
+  @@map("hotel_images")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model Hotels {
+  id            BigInt         @id @default(autoincrement())
+  name          String         @db.VarChar(100)
+  address       String?        @db.VarChar(255)
+  addressDetail String?        @map("address_detail") @db.VarChar(255)
+  zipCode       String?        @map("zip_code") @db.VarChar(10)
+  latitude      Decimal?       @db.Decimal(10, 8)
+  longitude     Decimal?       @db.Decimal(11, 8)
+  description   String?        @db.Text
+  starRating    Int?           @map("star_rating")
+  phoneNumber   String?        @map("phone_number") @db.VarChar(20)
+  websiteUrl    String?        @map("website_url") @db.VarChar(255)
+  checkInTime   DateTime?      @map("check_in_time") @db.Time(0)
+  checkOutTime  DateTime?      @map("check_out_time") @db.Time(0)
+  isActive      Boolean?       @default(true) @map("is_active")
+  createdAt     DateTime       @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt     DateTime       @default(now()) @map("updated_at") @db.DateTime(0)
+  hotelImages   HotelImages[]
+  productRooms  ProductRooms[]
+  roomTypes     RoomTypes[]
+
+  @@map("hotels")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model PaymentHistories {
+  id              BigInt                          @id @default(autoincrement())
+  purchaseOrderId BigInt                          @map("purchase_order_id")
+  transactionKey  String?                         @map("transaction_key") @db.VarChar(255)
+  pgProvider      String?                         @map("pg_provider") @db.VarChar(50)
+  method          String?                         @db.VarChar(50)
+  amount          Int
+  transactionType PaymentHistoriesTransactionType @map("transaction_type")
+  status          PaymentHistoriesStatus
+  reason          String?                         @db.VarChar(255)
+  requestedAt     DateTime                        @map("requested_at") @db.DateTime(0)
+  approvedAt      DateTime?                       @map("approved_at") @db.DateTime(0)
+  createdAt       DateTime                        @default(now()) @map("created_at") @db.DateTime(0)
+  purchaseOrders  PurchaseOrders                  @relation(fields: [purchaseOrderId], references: [id], onUpdate: Restrict, map: "payment_histories_ibfk_1")
+
+  @@index([purchaseOrderId], map: "purchase_order_id")
+  @@map("payment_histories")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model ProductRoomStocks {
+  id           BigInt       @id @default(autoincrement())
+  productId    BigInt       @map("product_id")
+  stockDate    DateTime     @map("stock_date") @db.Date
+  price        Int
+  commission   Int?         @default(0)
+  taxAmount    Int?         @default(0) @map("tax_amount")
+  totalQty     Int          @map("total_qty")
+  bookedQty    Int          @default(0) @map("booked_qty")
+  isAvailable  Boolean?     @default(true) @map("is_available")
+  version      Int?         @default(0)
+  productRooms ProductRooms @relation(fields: [productId], references: [productId], onDelete: Cascade, onUpdate: Restrict, map: "product_room_stocks_ibfk_1")
+
+  @@unique([productId, stockDate], map: "uk_prod_date")
+  @@index([stockDate, isAvailable], map: "idx_date_available")
+  @@map("product_room_stocks")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model ProductRooms {
+  productId         BigInt              @id @map("product_id")
+  hotelId           BigInt              @map("hotel_id")
+  roomTypeId        BigInt              @map("room_type_id")
+  baseQuantity      Int                 @default(0) @map("base_quantity")
+  weekdayPrice      Int                 @map("weekday_price")
+  weekendPrice      Int                 @map("weekend_price")
+  weekdayCommission Int?                @default(0) @map("weekday_commission")
+  weekendCommission Int?                @default(0) @map("weekend_commission")
+  taxRate           Decimal?            @default(0.00) @map("tax_rate") @db.Decimal(5, 2)
+  description       String?             @db.VarChar(255)
+  productRoomStocks ProductRoomStocks[]
+  products          Products            @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "product_rooms_ibfk_1")
+  hotels            Hotels              @relation(fields: [hotelId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "product_rooms_ibfk_2")
+  roomTypes         RoomTypes           @relation(fields: [roomTypeId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "product_rooms_ibfk_3")
+
+  @@unique([productId, hotelId, roomTypeId], map: "uk_event_hotel_room")
+  @@index([hotelId], map: "hotel_id")
+  @@index([roomTypeId], map: "room_type_id")
+  @@map("product_rooms")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model ProductTourDetails {
+  id           BigInt       @id @default(autoincrement())
+  productId    BigInt       @map("product_id")
+  description  String?      @db.Text
+  imageUrl     String?      @map("image_url") @db.VarChar(255)
+  displayOrder Int?         @default(0) @map("display_order")
+  productTours ProductTours @relation(fields: [productId], references: [productId], onDelete: Cascade, onUpdate: Restrict, map: "product_tour_details_ibfk_1")
+
+  @@index([productId], map: "product_id")
+  @@map("product_tour_details")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model ProductTourWaypoints {
+  id           BigInt       @id @default(autoincrement())
+  productId    BigInt       @map("product_id")
+  orderIndex   Int          @map("order_index")
+  name         String?      @db.VarChar(100)
+  latitude     Decimal      @db.Decimal(10, 8)
+  longitude    Decimal      @db.Decimal(11, 8)
+  description  String?      @db.VarChar(255)
+  productTours ProductTours @relation(fields: [productId], references: [productId], onDelete: Cascade, onUpdate: Restrict, map: "product_tour_waypoints_ibfk_1")
+
+  @@index([productId, orderIndex], map: "idx_tour_order")
+  @@map("product_tour_waypoints")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model ProductTours {
+  productId            BigInt                 @id @map("product_id")
+  summary              String?                @db.VarChar(255)
+  itinerary            String?                @db.Text
+  conditions           String?                @db.Text
+  pickupDropoffInfo    String?                @map("pickup_dropoff_info") @db.Text
+  tourDate             DateTime               @map("tour_date") @db.Date
+  bookingStartTime     DateTime               @map("booking_start_time") @db.Date
+  bookingEndTime       DateTime               @map("booking_end_time") @db.Date
+  tourStartTime        DateTime               @map("tour_start_time") @db.DateTime(0)
+  tourEndTime          DateTime               @map("tour_end_time") @db.DateTime(0)
+  price                Int                    @default(0)
+  minOccupancy         Int                    @default(1) @map("min_occupancy")
+  maxOccupancy         Int                    @default(2) @map("max_occupancy")
+  vehicleCount         Int                    @default(1) @map("vehicle_count")
+  productTourDetails   ProductTourDetails[]
+  productTourWaypoints ProductTourWaypoints[]
+  products             Products               @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "product_tours_ibfk_1")
+
+  @@map("product_tours")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model Products {
+  id                 BigInt               @id @default(autoincrement())
+  providerId         BigInt?              @map("provider_id")
+  type               ProductsType
+  name               String               @db.VarChar(200)
+  basePrice          Int                  @default(0) @map("base_price")
+  isActive           Boolean?             @default(true) @map("is_active")
+  createdAt          DateTime             @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt          DateTime             @default(now()) @map("updated_at") @db.DateTime(0)
+  productRooms       ProductRooms?
+  productTours       ProductTours?
+  providers          Providers?           @relation(fields: [providerId], references: [id], onUpdate: Restrict, map: "products_ibfk_1")
+  purchaseOrderItems PurchaseOrderItems[]
+
+  @@index([providerId], map: "provider_id")
+  @@map("products")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model Providers {
+  id               BigInt     @id @default(autoincrement())
+  title            String     @db.VarChar(200)
+  eventStartDate   DateTime   @map("event_start_date") @db.Date
+  eventEndDate     DateTime   @map("event_end_date") @db.Date
+  bookingStartDate DateTime   @map("booking_start_date") @db.Date
+  bookingEndDate   DateTime   @map("booking_end_date") @db.Date
+  address          String?    @db.VarChar(255)
+  addressDetail    String?    @map("address_detail") @db.VarChar(255)
+  latitude         Decimal?   @db.Decimal(10, 8)
+  longitude        Decimal?   @db.Decimal(11, 8)
+  image            String     @map("image_") @db.VarChar(255)
+  description      String?    @db.Text
+  isActive         Boolean?   @default(true) @map("is_active")
+  createdAt        DateTime   @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt        DateTime   @default(now()) @map("updated_at") @db.DateTime(0)
+  products         Products[]
+
+  @@map("providers")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model PurchaseOrderItems {
+  id                  BigInt                    @id @default(autoincrement())
+  purchaseOrderId     BigInt                    @map("purchase_order_id")
+  productId           BigInt                    @map("product_id")
+  productSnapshotJson String                    @map("product_snapshot_json") @db.LongText
+  price               Int
+  quantity            Int                       @default(1)
+  totalPrice          Int                       @map("total_price")
+  usageStartDate      DateTime                  @map("usage_start_date") @db.DateTime(0)
+  usageEndDate        DateTime                  @map("usage_end_date") @db.DateTime(0)
+  status              PurchaseOrderItemsStatus? @default(CONFIRMED)
+  purchaseOrders      PurchaseOrders            @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "purchase_order_items_ibfk_1")
+  products            Products                  @relation(fields: [productId], references: [id], onUpdate: Restrict, map: "purchase_order_items_ibfk_2")
+
+  @@index([productId], map: "product_id")
+  @@index([purchaseOrderId], map: "purchase_order_id")
+  @@map("purchase_order_items")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model PurchaseOrders {
+  id                 BigInt                @id @default(autoincrement())
+  userId             BigInt                @map("user_id")
+  orderNo            String                @unique(map: "order_no") @map("order_no") @db.VarChar(100)
+  orderName          String                @map("order_name") @db.VarChar(200)
+  status             PurchaseOrdersStatus? @default(PENDING)
+  totalAmount        Int                   @map("total_amount")
+  paymentAmount      Int                   @map("payment_amount")
+  createdAt          DateTime              @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt          DateTime              @default(now()) @map("updated_at") @db.DateTime(0)
+  paymentHistories   PaymentHistories[]
+  purchaseOrderItems PurchaseOrderItems[]
+  users              Users                 @relation(fields: [userId], references: [id], onUpdate: Restrict, map: "purchase_orders_ibfk_1")
+
+  @@index([userId, status], map: "idx_user_status")
+  @@map("purchase_orders")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model RoomTypes {
+  id           BigInt         @id @default(autoincrement())
+  hotelId      BigInt         @map("hotel_id")
+  name         String         @db.VarChar(100)
+  description  String?        @db.Text
+  bedType      String?        @map("bed_type") @db.VarChar(50)
+  minOccupancy Int?           @default(1) @map("min_occupancy")
+  maxOccupancy Int?           @default(2) @map("max_occupancy")
+  isActive     Boolean?       @default(true) @map("is_active")
+  createdAt    DateTime       @default(now()) @map("created_at") @db.DateTime(0)
+  updatedAt    DateTime       @default(now()) @map("updated_at") @db.DateTime(0)
+  productRooms ProductRooms[]
+  hotels       Hotels         @relation(fields: [hotelId], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "room_types_ibfk_1")
+
+  @@index([hotelId], map: "hotel_id")
+  @@map("room_types")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model Users {
+  id             BigInt           @id @default(autoincrement())
+  email          String           @unique(map: "email") @db.VarChar(100)
+  name           String           @db.VarChar(50)
+  phoneNumber    String?          @map("phone_number") @db.VarChar(20)
+  createdAt      DateTime         @default(now()) @map("created_at") @db.DateTime(0)
+  purchaseOrders PurchaseOrders[]
+
+  @@map("users")
+}
+
+enum ProductsType {
+  ROOM
+  TOUR
+
+  @@map("products_type")
+}
+
+enum PurchaseOrdersStatus {
+  PENDING
+  PAID
+  CANCELLED
+  REFUNDED
+
+  @@map("purchase_orders_status")
+}
+
+enum PaymentHistoriesTransactionType {
+  PAYMENT
+  REFUND
+  CANCEL
+
+  @@map("payment_histories_transaction_type")
+}
+
+enum PaymentHistoriesStatus {
+  READY
+  DONE
+  CANCELED
+  ABORTED
+
+  @@map("payment_histories_status")
+}
+
+enum PurchaseOrderItemsStatus {
+  CONFIRMED
+  CANCELLED
+
+  @@map("purchase_order_items_status")
+}
