@@ -42,9 +42,10 @@ export class TokenUtil {
     return jwt.sign({ uuid }, this.refreshTokenSecret, { expiresIn });
   }
 
-  generateCSRFToken() {
+  generateCSRFToken(rememberMe: boolean = false) {
+    const expiresIn = rememberMe ? '365d' : '10m';
     return jwt.sign({ key: uuidv4() }, this.csrfTokenSecret, {
-      expiresIn: '10m'
+      expiresIn
     });
   }
 

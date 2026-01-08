@@ -1,6 +1,4 @@
-# nestjs-starter-kit
-
-> 참고: 이 레포는 폴더 구조와 공용 파일의 참고 예시입니다.
+# codi-gtn-back
 
 ## nestjs의 실행 순서
 
@@ -24,16 +22,16 @@
 
 ## 개발환경
 
-- `node.js v20.11.0`
-- `nest.js v11.0.6`
-- `typescript v5.8.3`
+- `node.js v24.12.0`
+- `nest.js v11.1.11`
+- `typescript v5.9.3`
 
 ## 개발 컨벤션
 
 - `npm run prisma` 명령어를 통해 `prisma` ORM 을 사용하기 위한 파일 생성 및 데이터베이스를 연결한다.
   - 가능한 데이터베이스에서 테이블 및 컬럼 생성 후, 테이블 및 컬럼을 가져오는 방식을 활용한다.
-- 파일 `*.[역할].ts`은 camelCase로 명명 (ex. `axios.util.ts`, `login.controller.ts`, `authorize.guard.ts`)
-- 디렉토리 명은 소문자 명사와 하이픈을 사용한다. (ex. `popup-manage/`)
+- 파일, 디렉토리 명은 소문자 명사와 하이픈을 사용한다. (ex. `popup-manage/`, `admin-auth.middleware.ts`)
+- 변수 및 함수 명은 카멜 케이스를 사용한다. (ex. `adminAuthMiddleware`, `adminAuthMiddlewareSpec`)
 
 ## 깃허브 컨벤션
 
@@ -124,10 +122,6 @@ Closes #42
 #### scripts/ (스크립트)
 
 - `loadPrismaEnv.ts`: Prisma 환경변수 로드 및 DATABASE_URL 생성
-
-### test/ (테스트)
-
-- E2E 테스트 설정 및 테스트 파일
 
 ### prisma/ (데이터베이스 스키마)
 
