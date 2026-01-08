@@ -49,8 +49,8 @@ export class LoggerService implements NestLoggerService {
     // 에러 포함 모든 레벨 기록
     const appTransport = new DailyRotateFile({
       level: this.isLocalEnv ? 'debug' : 'info',
-      dirname: logDir,
-      filename: 'app-%DATE%.log',
+      filename: `${logDir}/%DATE%/app.log`,
+      auditFile: `${logDir}/audit/app-audit.json`,
       datePattern: 'YYYY-MM-DD',
       zippedArchive: true,
       maxSize: '20m',
@@ -65,8 +65,8 @@ export class LoggerService implements NestLoggerService {
 
     const accessTransport = new DailyRotateFile({
       level: 'info',
-      dirname: logDir,
-      filename: 'access-%DATE%.log',
+      filename: `${logDir}/%DATE%/access.log`,
+      auditFile: `${logDir}/audit/access-audit.json`,
       datePattern: 'YYYY-MM-DD',
       zippedArchive: true,
       maxSize: '20m',
@@ -83,8 +83,8 @@ export class LoggerService implements NestLoggerService {
     // 3. Error 로그 (App 및 Morgan 에러 통합)
     const errorTransport = new DailyRotateFile({
       level: 'error',
-      dirname: logDir,
-      filename: 'error-%DATE%.log',
+      filename: `${logDir}/%DATE%/error.log`,
+      auditFile: `${logDir}/audit/error-audit.json`,
       datePattern: 'YYYY-MM-DD',
       zippedArchive: true,
       maxSize: '20m',
@@ -97,17 +97,13 @@ export class LoggerService implements NestLoggerService {
     this.appLogger = winston.createLogger({
       transports: [
         consoleTransport,
-        // 로컬이 아닐 때만 파일 기록
-        ...(this.isLocalEnv ? [] : [appTransport]) // App 로그엔 Error는 별도로 안 넣고 app.log에 다 넣거나 선택 가능하지만, 보통 app.log는 전체.
-        // Node js snippet에서는 app log에 다 몰아넣음.
+        appTransport // 모든 환경에서 파일 기록
       ]
     });
 
     // HTTP Logger 생성: accessTransport (성공) + errorTransport (실패)
     this.httpLogger = winston.createLogger({
-      transports: this.isLocalEnv
-        ? [] // 로컬에선 파일 생성 안 함 (원한다면 추가 가능)
-        : [accessTransport, errorTransport]
+      transports: [accessTransport, errorTransport]
     });
   }
 
